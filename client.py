@@ -25,8 +25,8 @@ blue = (0, 0, 255)
 vehicle_width = 30
 vehicle_height = 30
 ambulance_speed = 2
-car1_speed = 1
-car2_speed = 0.5
+car1_speed = 0.5
+car2_speed = 0.25
 
 # Load the images for vehicles
 ambulance_image = pygame.image.load('ambulance.png')  # Change this to the actual filename
@@ -42,9 +42,9 @@ car2_image = pygame.transform.scale(car2_image, (vehicle_width, vehicle_height))
 circle_radius = 100
 
 # Initialize the position of the vehicles
-ambulance_x, ambulance_y = 46, 100
-car_1_x, car_1_y = 46, 300
-car_2_x, car_2_y = 46, 500
+ambulance_x, ambulance_y = 480, 162.0
+car_1_x, car_1_y = 480, 350
+car_2_x, car_2_y = 480, 500
 
 # Phone number map
 phone_map = {
@@ -54,13 +54,13 @@ phone_map = {
 
 # L-shaped path points
 l_path_points = [
-    (width // 4, height // 4),
-    (width // 4, 4.35 * height // 4),
-    (3 * width // 7, 4.35 * height // 4)
-]    
+    (width // 4, height // 3.05),
+    (width // 4, 4.28 * height // 4),
+    (3 * width // 7.3, 4.28 * height // 4)
+]
 
 # Shift the path to the left
-shift_amount = 204
+shift_amount = -230
 shifted_path = [(x - shift_amount, y) for x, y in l_path_points]
 
 # Increase the vertical height by adding a certain value to y-coordinates
@@ -72,19 +72,25 @@ clock = pygame.time.Clock()
 
 l_path_index = 0
 car1_l_path_index = 0
-car2_l_path_index = 0   
+car2_l_path_index = 0
 
 notification_sent_car_1 = False
 notification_sent_car_2 = False
 
-while True:
+ambulance_move = False  # Flag to track whether the ambulance should start moving
+
+running = True  # Flag to control the game loop
+
+while running:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
-            pygame.quit()
-            sys.exit()
+            running = False
+        elif event.type == pygame.KEYDOWN:
+            # Check if any key is pressed
+            ambulance_move = True
 
-    # Move the vehicles along their respective paths
-    if l_path_index < len(extended_path):
+    # Move the ambulance along the path when the key is pressed
+    if ambulance_move and l_path_index < len(extended_path):
         target_x, target_y = extended_path[l_path_index]
         direction_x = 1 if target_x > ambulance_x else -1
         direction_y = 1 if target_y > ambulance_y else -1
@@ -97,7 +103,8 @@ while True:
         # Check if the ambulance is close to the current target point on the L-shaped path
         if abs(ambulance_x - target_x) < ambulance_speed and abs(ambulance_y - target_y) < ambulance_speed:
             l_path_index += 1
-    
+
+    # Move the vehicles along their respective paths
     if car1_l_path_index < len(extended_path):
         target_x, target_y = extended_path[car1_l_path_index]
         # Reverse the direction for car 1
@@ -111,9 +118,9 @@ while True:
 
         # Check if car 1 is close to the end of the L-shaped path
         if (
-            car1_l_path_index < len(extended_path) - 1
-            and abs(car_1_x - extended_path[-1][0]) < car1_speed
-            and abs(car_1_y - extended_path[-1][1]) < car1_speed
+                car1_l_path_index < len(extended_path) - 1
+                and abs(car_1_x - extended_path[-1][0]) < car1_speed
+                and abs(car_1_y - extended_path[-1][1]) < car1_speed
         ):
             car1_l_path_index = len(extended_path)  # Stop car 1 at the end of the path
 
@@ -130,9 +137,9 @@ while True:
 
         # Check if car 2 is close to the end of the L-shaped path
         if (
-            car2_l_path_index < len(extended_path) - 1
-            and abs(car_2_x - extended_path[-1][0]) < car2_speed
-            and abs(car_2_y - extended_path[-1][1]) < car2_speed
+                car2_l_path_index < len(extended_path) - 1
+                and abs(car_2_x - extended_path[-1][0]) < car2_speed
+                and abs(car_2_y - extended_path[-1][1]) < car2_speed
         ):
             car2_l_path_index = len(extended_path)  # Stop car 2 at the end of the path
 
@@ -142,7 +149,7 @@ while True:
 
     # Notify if cars are within the circle of the ambulance
     if not notification_sent_car_1 and distance_car_1 < circle_radius:
-        # send_notification(phone_map["car_1"])
+        send_notification(phone_map["car_1"])
         notification_sent_car_1 = True
 
     if not notification_sent_car_2 and distance_car_2 < circle_radius:
@@ -153,7 +160,7 @@ while True:
     screen.blit(background_image, (0, 0))
 
     # Draw the L-shaped path
-    pygame.draw.lines(screen, black, False, extended_path, 2)
+    pygame.draw.lines(screen, blue, False, extended_path, 7)
 
     # Draw the ambulance
     screen.blit(ambulance_image, (ambulance_x - vehicle_width // 2, ambulance_y - vehicle_height // 2))
@@ -172,3 +179,7 @@ while True:
 
     # Cap the frame rate
     clock.tick(30)
+
+# Quit Pygame
+pygame.quit()
+sys.exit()
